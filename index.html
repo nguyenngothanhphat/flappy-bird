@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flappy Bird WebView</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: skyblue;
+            overflow: hidden;
+        }
+        canvas {
+            background-color: white;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.9;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        const bird = {
+            x: 50,
+            y: canvas.height / 2,
+            radius: canvas.width * 0.03,
+            gravity: 0.6,
+            lift: -10,
+            velocity: 0
+        };
+
+        const pipes = [];
+        const pipeWidth = canvas.width * 0.1;
+        const pipeGap = canvas.height * 0.25;
+        const pipeSpeed = 2;
+        let score = 0;
+        let gameOver = false;
+
+        function drawBird() {
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = "green";
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+                ctx.fillRect(pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - pipe.top - pipeGap);
+            });
+        }
+
+        function updateBird() {
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+            if (bird.y + bird.radius >= canvas.height) {
+                gameOver = true;
+            }
+        }
+
+        function updatePipes() {
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+                let topHeight = Math.random() * (canvas.height - pipeGap - 50) + 20;
+                pipes.push({ x: canvas.width, top: topHeight });
+            }
+
+            pipes.forEach(pipe => pipe.x -= pipeSpeed);
+            if (pipes.length && pipes[0].x + pipeWidth < 0) {
+                pipes.shift();
+                score++;
+            }
+        }
+
+        function checkCollision() {
+            pipes.forEach(pipe => {
+                if (
+                    bird.x + bird.radius > pipe.x &&
+                    bird.x - bird.radius < pipe.x + pipeWidth &&
+                    (bird.y - bird.radius < pipe.top || bird.y + bird.radius > pipe.top + pipeGap)
+                ) {
+                    gameOver = true;
+                }
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
+            drawScore();
+        }
+
+        function update() {
+            if (!gameOver) {
+                updateBird();
+                updatePipes();
+                checkCollision();
+                draw();
+                requestAnimationFrame(update);
+            } else {
+                ctx.fillStyle = "red";
+                ctx.font = "30px Arial";
+                ctx.fillText("Game Over", canvas.width / 2 - 70, canvas.height / 2);
+            }
+        }
+
+        document.addEventListener("keydown", () => {
+            bird.velocity = bird.lift;
+        });
+
+        document.getElementById("gameCanvas").addEventListener("click", () => {
+            bird.velocity = bird.lift;
+        });
+
+        update();
+    </script>
+</body>
+</html>
