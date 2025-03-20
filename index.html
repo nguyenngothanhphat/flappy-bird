@@ -13,18 +13,38 @@
             margin: 0;
             background-color: skyblue;
             overflow: hidden;
+            flex-direction: column;
         }
         canvas {
             background-color: white;
             border: 2px solid black;
         }
+        .game-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            display: block;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    <button id="startButton" class="game-button">Start Game</button>
+    <button id="restartButton" class="game-button" style="display: none;">Restart Game</button>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const startButton = document.getElementById("startButton");
+        const restartButton = document.getElementById("restartButton");
+        let gameStarted = false;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth * 0.9;
@@ -37,15 +57,15 @@
             x: 50,
             y: canvas.height / 2,
             radius: canvas.width * 0.03,
-            gravity: 0.6,
-            lift: -10,
+            gravity: 0.4,
+            lift: -8,
             velocity: 0
         };
 
         const pipes = [];
         const pipeWidth = canvas.width * 0.1;
-        const pipeGap = canvas.height * 0.25;
-        const pipeSpeed = 2;
+        const pipeGap = canvas.height * 0.35;
+        const pipeSpeed = 1.5;
         let score = 0;
         let gameOver = false;
 
@@ -73,11 +93,10 @@
         }
 
         function updatePipes() {
-            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
                 let topHeight = Math.random() * (canvas.height - pipeGap - 50) + 20;
                 pipes.push({ x: canvas.width, top: topHeight });
             }
-
             pipes.forEach(pipe => pipe.x -= pipeSpeed);
             if (pipes.length && pipes[0].x + pipeWidth < 0) {
                 pipes.shift();
@@ -121,18 +140,32 @@
                 ctx.fillStyle = "red";
                 ctx.font = "30px Arial";
                 ctx.fillText("Game Over", canvas.width / 2 - 70, canvas.height / 2);
+                restartButton.style.display = "block";
             }
         }
 
         document.addEventListener("keydown", () => {
-            bird.velocity = bird.lift;
+            if (gameStarted) bird.velocity = bird.lift;
         });
 
         document.getElementById("gameCanvas").addEventListener("click", () => {
-            bird.velocity = bird.lift;
+            if (gameStarted) bird.velocity = bird.lift;
         });
 
-        update();
+        function startGame() {
+            gameStarted = true;
+            gameOver = false;
+            pipes.length = 0;
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            score = 0;
+            update();
+            startButton.style.display = "none";
+            restartButton.style.display = "none";
+        }
+
+        startButton.addEventListener("click", startGame);
+        restartButton.addEventListener("click", startGame);
     </script>
 </body>
 </html>
